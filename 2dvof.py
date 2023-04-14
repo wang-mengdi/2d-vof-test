@@ -226,6 +226,12 @@ def cal_nu_rho():
 def advect_upwind():
     for i, j in ti.ndrange((imin + 1, imax + 1), (jmin, jmax + 1)):
         v_here = 0.25 * (v[i - 1, j] + v[i - 1, j + 1] + v[i, j] + v[i, j + 1])
+
+        v_bar1 = 0.5*(v[i, j + 1] + v[i + 1, j + 1])
+        v_bar2 = 0.5*(v[i, j] + v[i + 1, j])
+        t11 = pow(u[i + 1, j], 2) - pow(u[i - 1, j], 2)
+        t12 = u[i, j + 1]*v_bar1 - u[i, j - 1]*v_bar2
+
         dudx = (u[i,j] - u[i-1,j]) * dxi if u[i,j] > 0 else (u[i+1,j]-u[i,j])*dxi
         dudy = (u[i,j] - u[i,j-1]) * dyi if v_here > 0 else (u[i,j+1]-u[i,j])*dyi
         kappa_ave = (kappa[i, j] + kappa[i - 1, j]) / 2.0
@@ -239,15 +245,22 @@ def advect_upwind():
         )
     for i, j in ti.ndrange((imin, imax + 1), (jmin + 1, jmax + 1)):
         u_here = 0.25 * (u[i, j - 1] + u[i, j] + u[i + 1, j - 1] + u[i + 1, j])
+
+        u_bar1 = 0.5 *(u[i, j - 1] + u[i, j])
+        u_bar2 = 0.5 *(u[i - 1, j - 1] + u[i - 1, j])
+        t11 = v[i + 1, j] * u_bar1 - v[i - 1, j] * u_bar2
+        t12 = v[i, j + 1]**2 - v[i, j - 1]**2
         dvdx = (v[i,j] - v[i-1,j]) * dxi if u_here > 0 else (v[i+1,j] - v[i,j]) * dxi
         dvdy = (v[i,j] - v[i,j-1]) * dyi if v[i,j] > 0 else (v[i,j+1] - v[i,j]) * dyi
         kappa_ave = (kappa[i, j] + kappa[i, j - 1]) / 2.0
-        fy_kappa = - sigma[None] * (F[i, j] - F[i, j - 1]) * kappa_ave / dy        
+        fy_kappa = - sigma[None] * (F[i, j] - F[i, j - 1]) * kappa_ave / dy
+        term1,term2=- u_here * dvdx - v[i, j] * dvdy,-(t11 * dxi * 0.5 + t12 *dyi*0.5)
         v_star[i, j] = (
             v[i, j] + dt *
             (nu[i, j] * (v[i - 1, j] - 2 * v[i, j] + v[i + 1, j]) * dxi**2
              + nu[i, j] * (v[i, j - 1] - 2 * v[i, j] + v[i, j + 1]) * dyi**2
-             - u_here * dvdx - v[i, j] * dvdy
+             #- u_here * dvdx - v[i, j] * dvdy
+             -(t11 * dxi * 0.5 + t12 *dyi*0.5)
              + gy +  fy_kappa * 2 / (rho[i, j] + rho[i, j - 1]))
         )
 
