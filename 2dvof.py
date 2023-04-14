@@ -22,7 +22,7 @@ ny = 200  # Number of grid points in the y direction
 Lx = 0.1  # The length of the domain
 Ly = 0.1  # The width of the domain
 rho_l = 1000.0
-rho_g = 50.0
+rho_g = 50
 nu_l = 1.0e-6  # kinematic viscosity, nu = mu / rho
 nu_g = 1.5e-5
 sigma = ti.field(dtype=float, shape=())
@@ -238,8 +238,8 @@ def advect_upwind():
             u[i, j] + dt *
             (nu[i, j] * (u[i - 1, j] - 2 * u[i, j] + u[i + 1, j]) * dxi**2
              + nu[i, j] * (u[i, j - 1] - 2 * u[i, j] + u[i, j + 1]) * dyi**2
-             #- u[i, j] * dudx - v_here * dudy
-             - (Eij*dxi+Fij*dyi)
+             - u[i, j] * dudx - v_here * dudy
+             #- (Eij*dxi+Fij*dyi)
              + gx + fx_kappa * 2 / (rho[i, j] + rho[i - 1, j]))
         )
     for i, j in ti.ndrange((imin, imax + 1), (jmin + 1, jmax + 1)):
@@ -257,8 +257,8 @@ def advect_upwind():
             v[i, j] + dt *
             (nu[i, j] * (v[i - 1, j] - 2 * v[i, j] + v[i + 1, j]) * dxi**2
              + nu[i, j] * (v[i, j - 1] - 2 * v[i, j] + v[i, j + 1]) * dyi**2
-             #- u_here * dvdx - v[i, j] * dvdy
-             - (Eij*dxi+Fij*dyi)
+             - u_here * dvdx - v[i, j] * dvdy
+             #- (Eij*dxi+Fij*dyi)
              + gy +  fy_kappa * 2 / (rho[i, j] + rho[i, j - 1]))
         )
 
